@@ -5,7 +5,7 @@
 ## 项目结构（Monorepo）
 
 ```
-compus-xiaohongshu/
+campus-xhs/
 ├── campus-xiaohongshu/            # 后端（Spring Boot 3 + MyBatis-Plus）
 │   ├── sql/init.sql               # 数据库初始化脚本
 │   └── src/main/java/com/chenpperr/xhs/
