@@ -89,6 +89,23 @@ npm run dev
 - 通知中心（点赞、评论通知 + 已读标记）
 - 关键词搜索
 
+## 界面预览
+
+### 登录界面
+![登录界面](docs/images/login.png)
+
+### 首页
+![首页](docs/images/home.png)
+
+### 笔记发布
+![笔记发布](docs/images/publish.png)
+
+### 个人主页
+![个人主页](docs/images/profile.png)
+
+### 通知界面
+![通知界面](docs/images/notifications.png)
+
 ## 环境变量说明
 
 后端敏感配置均通过环境变量注入（真实值在 `application-local.yml`）：
