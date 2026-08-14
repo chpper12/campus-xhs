@@ -1,0 +1,90 @@
+# =====================================================
+# 校园小红书 MVP - 应用配置文件
+# =====================================================
+# 说明：敏感信息（数据库/Redis密码、OSS密钥、AI Key、JWT密钥）
+# 均存放在 application-local.yml（已被 .gitignore 排除），
+# 本地开发时激活 local profile 自动加载。
+# 提交到仓库的此文件只保留非敏感配置 + 环境变量占位符。
+
+server:
+  port: 8081
+
+spring:
+  # 默认激活本地 profile，加载 application-local.yml 中的真实密钥
+  profiles:
+    active: local
+
+  application:
+    name: campus-xiaohongshu
+
+  # 数据源配置
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/campus_xiaohongshu?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: root
+    password: ${MYSQL_PASSWORD:}   # 真实值见 application-local.yml
+
+  # Redis配置
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: ${REDIS_PASSWORD:} # 真实值见 application-local.yml
+      database: 0
+      timeout: 10000ms
+
+  # 文件上传配置
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
+
+# MyBatis-Plus配置
+mybatis-plus:
+  mapper-locations: classpath*:/mapper/**/*.xml
+  type-aliases-package: com.chenpperr.xhs.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      id-type: auto
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+# 阿里云OSS配置
+aliyun:
+  oss:
+    endpoint: oss-cn-beijing.aliyuncs.com
+    access-key-id: ${OSS_ACCESS_KEY_ID:}       # 真实值见 application-local.yml
+    access-key-secret: ${OSS_ACCESS_KEY_SECRET:} # 真实值见 application-local.yml
+    bucket-name: campus-xhs-img
+    url-prefix: https://campus-xhs-img.oss-cn-beijing.aliyuncs.com
+
+# 文件上传配置（使用阿里云OSS）
+upload:
+  type: oss
+
+# JWT配置
+jwt:
+  secret: ${JWT_SECRET:}   # 真实值见 application-local.yml
+  expiration: 86400000
+
+# AI大模型配置（兼容OpenAI格式）
+ai:
+  api-key: ${AI_API_KEY:}  # 真实值见 application-local.yml
+  # API地址（默认DeepSeek，可替换为其他兼容接口）
+  api-url: https://api.deepseek.com/v1/chat/completions
+  model: deepseek-chat
+  max-tokens: 500
+  temperature: 0.7
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.chenpperr.xhs: DEBUG
+    org.springframework.security: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"

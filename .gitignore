@@ -1,0 +1,41 @@
+# =====================================================
+# 校园小红书 - Git 忽略规则（monorepo）
+# =====================================================
+
+# ===== IDE =====
+.idea/
+*.iml
+.vscode/
+.DS_Store
+Thumbs.db
+
+# ===== 后端 (Spring Boot) =====
+campus-xiaohongshu/target/
+campus-xiaohongshu/*.log
+campus-xiaohongshu/logs/
+# 敏感配置文件（含真实密钥，绝不提交）
+campus-xiaohongshu/src/main/resources/application-local.yml
+
+# ===== 前端 (Vue) =====
+campus-xiaohongshu-frontend/node_modules/
+campus-xiaohongshu-frontend/dist/
+campus-xiaohongshu-frontend/*.log
+campus-xiaohongshu-frontend/.vite/
+
+# ===== 运行时数据 =====
+uploads/
+*.class
+*.jar
+!.mvn/wrapper/maven-wrapper.jar
+
+# ===== 环境变量 / 密钥 =====
+.env
+.env.local
+.env.*.local
+
+# ===== 交接/内部文档（不提交） =====
+HANDOVER.md
+
+# ===== 系统文件 =====
+*.tmp
+*.swp
