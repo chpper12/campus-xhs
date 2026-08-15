@@ -13,6 +13,8 @@ import com.chenpperr.xhs.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
 
 /**
  * 用户 Service 实现类
@@ -23,6 +25,8 @@ import org.springframework.stereotype.Service;
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
 
     private final JwtUtil jwtUtil;
+    private final PasswordEncoder passwordEncoder;
+
 
     @Override
     public User findByUsername(String username) {
@@ -33,7 +37,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Override
     public User validateUser(String username, String password) {
         User user = findByUsername(username);
-        if (user != null && user.getPassword().equals(password)) {
+        if (user != null && passwordEncoder.matches(password, user.getPassword())) {
             return user;
         }
         return null;
@@ -62,7 +66,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         // 2. 构建新用户（昵称默认等于用户名）
         User user = User.builder()
                 .username(dto.getUsername())
-                .password(dto.getPassword())  // 注意：实际项目中应加密存储
+                .password(passwordEncoder.encode(dto.getPassword()))
                 .nickname(dto.getNickname() != null ? dto.getNickname() : dto.getUsername())
                 .avatar("")
                 .bio("")

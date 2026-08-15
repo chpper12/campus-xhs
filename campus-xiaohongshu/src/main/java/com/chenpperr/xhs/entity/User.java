@@ -55,6 +55,16 @@ public class User implements Serializable {
     private String bio;
 
     /**
+     * 手机号
+     */
+    private String phone;
+
+    /**
+     * 邮箱
+     */
+    private String email;
+
+    /**
      * 状态（1=正常，0=禁用）
      */
     private Integer status;

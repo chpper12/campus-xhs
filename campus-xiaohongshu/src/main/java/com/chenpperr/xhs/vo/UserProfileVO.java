@@ -1,5 +1,7 @@
 package com.chenpperr.xhs.vo;
 
+import com.chenpperr.xhs.common.sensitive.Sensitive;
+import com.chenpperr.xhs.common.sensitive.SensitiveType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -37,6 +39,18 @@ public class UserProfileVO implements Serializable {
      * 个人简介
      */
     private String bio;
+
+    /**
+     * 手机号（这里就是脱敏的生效点）
+     */
+    @Sensitive(type = SensitiveType.MOBILE)
+    private String phone;
+
+    /**
+     * 邮箱
+     */
+    @Sensitive(type = SensitiveType.EMAIL)
+    private String email;
 
     /**
      * 发布笔记数

@@ -67,6 +67,8 @@ public class UserController {
                 .nickname(user.getNickname())
                 .avatar(user.getAvatar())
                 .bio(user.getBio())
+                .phone(user.getPhone())
+                .email(user.getEmail())
                 .postCount(postCount)
                 .followingCount(followingCount)
                 .followerCount(followerCount)

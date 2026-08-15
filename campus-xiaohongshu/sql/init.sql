@@ -20,6 +20,8 @@ CREATE TABLE `user` (
     `nickname`    VARCHAR(50)  NOT NULL DEFAULT '' COMMENT '昵称',
     `avatar`      VARCHAR(500) NOT NULL DEFAULT '' COMMENT '头像URL',
     `bio`         VARCHAR(200) NOT NULL DEFAULT '' COMMENT '个人简介',
+    `phone`       VARCHAR(20)  NOT NULL DEFAULT '' COMMENT '手机号',
+    `email`       Varchar(100) Not Null DEFAULT '' COMMENT '邮箱',
     `status`      TINYINT      NOT NULL DEFAULT 1 COMMENT '状态：0-禁用 1-正常',
     `create_time` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `update_time` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
@@ -119,8 +121,12 @@ CREATE TABLE `notice` (
 -- =====================================================
 
 -- 用户数据
-INSERT INTO `user` (`id`, `username`, `password`, `nickname`, `avatar`) VALUES
-(1, 'test', '123456', '测试用户', 'https://via.placeholder.com/100');
+INSERT INTO `user` (`id`, `username`, `password`, `nickname`, `avatar`,`phone`,`email`) VALUES
+(1, 'test', '$2a$10$Zuhr9bmp3RTmJMIC93Jaeu.WQ1TTg1RY9HjVo/TMjZupz1UZNx3Uq',
+ '测试用户',
+ 'https://via.placeholder.com/100',
+'13812346789',
+'test@qq.com');
 
 -- 笔记数据
 INSERT INTO `post` (`user_id`, `title`, `category`, `content`, `polished_content`, `tags`, `image_urls`, `like_count`, `comment_count`) VALUES
