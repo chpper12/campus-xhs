@@ -149,13 +149,13 @@
                 {{ post.title }}
               </h3>
               <div class="flex items-center justify-between">
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-2 cursor-pointer" @click.stop="router.push(`/profile/${post.author.userId}`)">
                   <img
                     :src="post.author.avatar"
                     :alt="post.author.nickname"
-                    class="w-6 h-6 rounded-full object-cover"
+                    class="w-6 h-6 rounded-full object-cover hover:ring-2 hover:ring-primary/30 transition-all"
                   />
-                  <span class="text-xs text-gray-500">{{ post.author.nickname }}</span>
+                  <span class="text-xs text-gray-500 hover:text-primary transition-colors">{{ post.author.nickname }}</span>
                 </div>
                 <button
                   class="flex items-center gap-1 text-gray-400 hover:text-primary transition-colors"

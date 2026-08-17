@@ -90,24 +90,27 @@
           </button>
         </div>
 
-        <!-- 作者信息 -->
+        <!-- 作者信息（点击头像/名字跳转到作者主页） -->
         <div class="flex items-center gap-3 px-6 pb-4 border-b border-gray-100">
           <img
             :src="post.author.avatar"
             :alt="post.author.nickname"
-            class="w-10 h-10 rounded-full object-cover"
+            class="w-10 h-10 rounded-full object-cover cursor-pointer hover:ring-2 hover:ring-primary/30 transition-all"
+            @click="goToAuthorProfile"
           />
-          <div>
-            <div class="font-medium text-gray-900">{{ post.author.nickname }}</div>
+          <div class="cursor-pointer" @click="goToAuthorProfile">
+            <div class="font-medium text-gray-900 hover:text-primary transition-colors">{{ post.author.nickname }}</div>
             <div class="text-xs text-gray-400">发布于 {{ post.createTime }}</div>
           </div>
           <el-button
             class="ml-auto"
-            type="primary"
+            :type="followed ? 'default' : 'primary'"
             plain
             size="small"
+            :loading="followLoading"
+            @click="handleFollowToggle"
           >
-            关注
+            {{ followed ? '已关注' : '关注' }}
           </el-button>
         </div>
 
@@ -226,8 +229,10 @@
 import { ref, computed, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Close, ArrowLeft, ArrowRight } from '@element-plus/icons-vue'
+import { useRouter } from 'vue-router'
 import { likePost, getPostDetail, type Post, type PostDetail } from '@/api/posts'
 import { getComments, addComment, type Comment } from '@/api/comments'
+import { followUser, unfollowUser, isFollowed } from '@/api/user'
 
 interface Props {
   visible: boolean
@@ -241,6 +246,7 @@ interface Emits {
 
 const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
+const router = useRouter()
 
 const visible = ref(props.visible)
 const commentContent = ref('')
@@ -248,6 +254,10 @@ const comments = ref<Comment[]>([])
 const loadingComments = ref(false)
 const postDetail = ref<PostDetail | null>(null)
 const loadingDetail = ref(false)
+
+// 关注状态
+const followed = ref(false)
+const followLoading = ref(false)
 
 // 轮播相关状态
 const currentIndex = ref(0)
@@ -270,6 +280,7 @@ watch(() => props.visible, (val) => {
     currentIndex.value = 0 // 重置轮播索引
     fetchPostDetail()
     fetchComments()
+    fetchFollowStatus()
   }
 })
 
@@ -360,6 +371,50 @@ const handleComment = async () => {
   } catch (error) {
     console.error('评论失败:', error)
   }
+}
+
+// 获取当前用户是否已关注笔记作者
+const fetchFollowStatus = async () => {
+  const authorUserId = props.post.author?.userId
+  if (!authorUserId) return
+  try {
+    followed.value = await isFollowed(authorUserId)
+  } catch (error) {
+    console.error('获取关注状态失败:', error)
+  }
+}
+
+// 关注/取关笔记作者
+const handleFollowToggle = async () => {
+  const authorUserId = props.post.author?.userId
+  if (!authorUserId) return
+
+  followLoading.value = true
+  try {
+    if (followed.value) {
+      await unfollowUser(authorUserId)
+      followed.value = false
+      ElMessage.success('已取消关注')
+    } else {
+      await followUser(authorUserId)
+      followed.value = true
+      ElMessage.success('关注成功')
+    }
+  } catch (error) {
+    console.error('关注操作失败:', error)
+    ElMessage.error('关注操作失败')
+  } finally {
+    followLoading.value = false
+  }
+}
+
+// 跳转到作者主页
+const goToAuthorProfile = () => {
+  const authorUserId = props.post.author?.userId
+  if (!authorUserId) return
+  // 关闭当前弹窗后再跳转
+  visible.value = false
+  router.push(`/profile/${authorUserId}`)
 }
 
 // 关闭弹窗

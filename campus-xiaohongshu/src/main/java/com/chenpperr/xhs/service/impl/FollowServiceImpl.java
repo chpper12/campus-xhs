@@ -52,7 +52,7 @@ public class FollowServiceImpl
      *
      * 流程：
      *   1. 校验不能关注自己
-     *   2. 从 Redis 判断是否已关注（幂等）
+     *   2. 以数据库为准判断是否已关注（幂等，防止 Redis 脏缓存误判）
      *   3. 写入数据库
      *   4. 更新 Redis 缓存（两个 Set 同步更新）
      *   5. 创建关注通知
@@ -68,9 +68,15 @@ public class FollowServiceImpl
             throw new BusinessException(ResultCode.BAD_REQUEST, "不能关注自己");
         }
 
-        // 2. 判断是否已关注
-        if (isFollowing(userId, followUserId)) {
-            return; // 幂等，已关注则忽略
+        // 2. 以数据库为准判断是否已关注（Redis 可能残留脏数据，不能作为写路径的判断依据）
+        long existing = count(new LambdaQueryWrapper<Follow>()
+                .eq(Follow::getUserId, userId)
+                .eq(Follow::getFollowUserId, followUserId));
+        if (existing > 0) {
+            // 幂等：已关注则忽略，同时回填 Redis 修复缓存与库不一致
+            redisUtil.sAdd("user:following:" + userId, String.valueOf(followUserId));
+            redisUtil.sAdd("user:follower:" + followUserId, String.valueOf(userId));
+            return;
         }
 
         // 3. 写入数据库
@@ -108,7 +114,7 @@ public class FollowServiceImpl
      * 取消关注某用户
      *
      * 流程：
-     *   1. 从 Redis 判断是否已关注
+     *   1. 以数据库为准判断是否已关注
      *   2. 删除数据库记录
      *   3. 更新 Redis 缓存
      *
@@ -118,9 +124,15 @@ public class FollowServiceImpl
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void unfollow(Long userId, Long followUserId) {
-        // 1. 判断是否已关注
-        if (!isFollowing(userId, followUserId)) {
-            return; // 未关注则忽略
+        // 1. 以数据库为准判断是否已关注
+        long existing = count(new LambdaQueryWrapper<Follow>()
+                .eq(Follow::getUserId, userId)
+                .eq(Follow::getFollowUserId, followUserId));
+        if (existing == 0) {
+            // 未关注则忽略，同时清理 Redis 中可能残留的脏数据
+            redisUtil.sRemove("user:following:" + userId, String.valueOf(followUserId));
+            redisUtil.sRemove("user:follower:" + followUserId, String.valueOf(userId));
+            return;
         }
 
         // 2. 删除数据库记录
@@ -140,7 +152,7 @@ public class FollowServiceImpl
     /**
      * 查询当前用户是否已关注某用户
      *
-     * 优先从 Redis 查询，降级查数据库
+     * 优先从 Redis 查询；Redis 未命中时降级查数据库并回填缓存
      *
      * @param userId       当前用户ID
      * @param followUserId 目标用户ID
@@ -149,7 +161,20 @@ public class FollowServiceImpl
     @Override
     public boolean isFollowing(Long userId, Long followUserId) {
         String key = "user:following:" + userId;
-        return Boolean.TRUE.equals(redisUtil.sIsMember(key, String.valueOf(followUserId)));
+        if (Boolean.TRUE.equals(redisUtil.sIsMember(key, String.valueOf(followUserId)))) {
+            return true;
+        }
+        // Redis 未命中（如缓存被清空），降级查数据库
+        long dbCount = count(new LambdaQueryWrapper<Follow>()
+                .eq(Follow::getUserId, userId)
+                .eq(Follow::getFollowUserId, followUserId));
+        if (dbCount > 0) {
+            // 数据库有记录但缓存缺失，回填缓存
+            redisUtil.sAdd(key, String.valueOf(followUserId));
+            redisUtil.sAdd("user:follower:" + followUserId, String.valueOf(userId));
+            return true;
+        }
+        return false;
     }
 
     /**
