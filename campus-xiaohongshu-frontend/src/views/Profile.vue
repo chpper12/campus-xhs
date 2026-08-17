@@ -106,9 +106,21 @@
               </div>
 
               <!-- bio -->
-              <p class="text-gray-500 mb-6 leading-relaxed">
+              <p class="text-gray-500 mb-4 leading-relaxed">
                 {{ profile.bio || '这个人很懒，什么都没写~' }}
               </p>
+
+              <!-- 联系方式（仅自己主页显示，后端返回脱敏值） -->
+              <div v-if="isMyProfile" class="flex items-center gap-6 mb-5 text-sm text-gray-400">
+                <span class="flex items-center gap-1.5">
+                  <el-icon :size="14"><Iphone /></el-icon>
+                  {{ profile.phone || '未绑定手机号' }}
+                </span>
+                <span class="flex items-center gap-1.5">
+                  <el-icon :size="14"><Message /></el-icon>
+                  {{ profile.email || '未绑定邮箱' }}
+                </span>
+              </div>
 
               <!-- 统计数据 -->
               <div class="flex gap-10">
@@ -238,7 +250,7 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { House, Loading, Document, Bell, User, Edit, Delete } from '@element-plus/icons-vue'
+import { House, Loading, Document, Bell, User, Edit, Delete, Iphone, Message } from '@element-plus/icons-vue'
 import {
   getUserProfile,
   getUserPosts,

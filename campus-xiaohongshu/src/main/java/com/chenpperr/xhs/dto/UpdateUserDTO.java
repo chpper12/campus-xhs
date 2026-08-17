@@ -1,5 +1,7 @@
 package com.chenpperr.xhs.dto;
 
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
@@ -30,4 +32,17 @@ public class UpdateUserDTO implements Serializable {
      */
     @Size(max = 500, message = "头像URL过长")
     private String avatar;
+
+    /**
+     * 手机号（选填；为 null 表示不修改。@Pattern 对 null 放行，不影响选填语义）
+     */
+    @Pattern(regexp = "^1[3-9]\\d{9}$", message = "手机号格式不正确")
+    private String phone;
+
+    /**
+     * 邮箱（选填；为 null 表示不修改。@Email 对 null 放行，不影响选填语义）
+     */
+    @Email(message = "邮箱格式不正确")
+    @Size(max = 100, message = "邮箱长度不能超过100字")
+    private String email;
 }

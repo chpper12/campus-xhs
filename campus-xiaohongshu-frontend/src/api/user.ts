@@ -8,6 +8,10 @@ export interface UserProfile {
   nickname: string
   avatar: string
   bio: string
+  /** 手机号（后端 @Sensitive 脱敏后返回，如 138****6789） */
+  phone: string
+  /** 邮箱（后端 @Sensitive 脱敏后返回，如 t****@qq.com） */
+  email: string
   postCount: number
   followingCount: number
   followerCount: number
@@ -44,6 +48,8 @@ export interface UpdateProfileParams {
   nickname?: string
   bio?: string
   avatar?: string
+  phone?: string
+  email?: string
 }
 
 // ======================== API 函数 ========================

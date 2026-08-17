@@ -100,7 +100,8 @@ public class UserController {
 
     /**
      * PUT /api/v1/users/me
-     * 编辑当前登录用户的个人资料（昵称、简介、头像）
+     * 编辑当前登录用户的个人资料（昵称、简介、头像、手机号、邮箱）
+     * 所有字段均为可选，只更新请求体中非 null 的字段
      *
      * @param dto 更新参数
      * @return 统一结果

@@ -124,17 +124,17 @@ CREATE TABLE `notice` (
 INSERT INTO `user` (`id`, `username`, `password`, `nickname`, `avatar`,`phone`,`email`) VALUES
 (1, 'test', '$2a$10$Zuhr9bmp3RTmJMIC93Jaeu.WQ1TTg1RY9HjVo/TMjZupz1UZNx3Uq',
  '测试用户',
- 'https://via.placeholder.com/100',
+ 'https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=Portrait%20headshot%20of%20a%20friendly%20young%20Chinese%20college%20student%2C%20gentle%20smile%2C%20soft%20studio%20lighting%2C%20clean%20light%20background%2C%20avatar%20photo&image_size=square_hd',
 '13812346789',
 'test@qq.com');
 
 -- 笔记数据
 INSERT INTO `post` (`user_id`, `title`, `category`, `content`, `polished_content`, `tags`, `image_urls`, `like_count`, `comment_count`) VALUES
-(1, '食堂新品红烧肉测评', '美食', '今天去食堂发现了一个超好吃的窗口，红烧肉特别香，强烈推荐！', '今天漫步校园食堂，意外发现了一个令人惊喜的美食窗口。那里的红烧肉色泽红润，香气四溢，让人垂涎欲滴。强烈推荐给各位同学！', '["#食堂","#美食","#红烧肉","#校园生活"]', '["https://via.placeholder.com/400x300?text=food1"]', 42, 3),
-(1, '图书馆自习打卡', '推荐', '图书馆五楼靠窗位置太棒了，阳光正好，学习效率翻倍！', '图书馆五楼靠窗的位置简直是学习的绝佳圣地。温暖的阳光洒在书桌上，让人心情愉悦，学习效率也随之翻倍。强烈推荐！', '["#图书馆","#自习","#学习","#校园生活"]', '["https://via.placeholder.com/400x300?text=library1"]', 28, 1),
-(1, '今日穿搭分享', '穿搭', '今天穿了新买的卫衣，搭配牛仔裤，简约又好看～', '今日穿搭分享：一件新入手的卫衣，搭配经典牛仔裤，简约而不失时尚感，轻松打造休闲校园风。', '["#穿搭","#卫衣","#校园风","#日常穿搭"]', '["https://via.placeholder.com/400x300?text=outfit1"]', 35, 2),
-(1, '操场夜跑打卡', '健身', '今晚跑了5公里，出汗的感觉真舒服！坚持锻炼，保持好身材。', '今晚在操场完成了5公里夜跑，大汗淋漓的感觉真是畅快淋漓！坚持锻炼，保持健康好身材，一起动起来吧！', '["#健身","#夜跑","#运动","#校园生活"]', '["https://via.placeholder.com/400x300?text=run1"]', 19, 0),
-(1, '宿舍游戏开黑', '游戏', '周末和室友一起开黑打游戏，太快乐了！', '周末时光，和室友们一起开黑打游戏，欢声笑语中度过了一段快乐的时光。游戏虽好，也要注意休息哦！', '["#游戏","#室友","#周末","#开黑"]', '["https://via.placeholder.com/400x300?text=game1"]', 23, 1);
+(1, '食堂新品红烧肉测评', '美食', '今天去食堂发现了一个超好吃的窗口，红烧肉特别香，强烈推荐！', '今天漫步校园食堂，意外发现了一个令人惊喜的美食窗口。那里的红烧肉色泽红润，香气四溢，让人垂涎欲滴。强烈推荐给各位同学！', '["#食堂","#美食","#红烧肉","#校园生活"]', '["https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=A%20delicious%20braised%20pork%20belly%20rice%20bowl%20served%20in%20a%20Chinese%20university%20cafeteria%2C%20glossy%20caramelized%20meat%2C%20steamed%20rice%20and%20greens%2C%20appetizing%20food%20photography%2C%20warm%20natural%20lighting%2C%20close-up%20shot&image_size=landscape_4_3"]', 42, 3),
+(1, '图书馆自习打卡', '推荐', '图书馆五楼靠窗位置太棒了，阳光正好，学习效率翻倍！', '图书馆五楼靠窗的位置简直是学习的绝佳圣地。温暖的阳光洒在书桌上，让人心情愉悦，学习效率也随之翻倍。强烈推荐！', '["#图书馆","#自习","#学习","#校园生活"]', '["https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=A%20bright%20modern%20university%20library%20interior%2C%20students%20studying%20quietly%20at%20wooden%20desks%20near%20large%20windows%2C%20warm%20sunlight%20streaming%20in%2C%20bookshelves%20in%20the%20background%2C%20cozy%20academic%20atmosphere&image_size=landscape_4_3"]', 28, 1),
+(1, '今日穿搭分享', '穿搭', '今天穿了新买的卫衣，搭配牛仔裤，简约又好看～', '今日穿搭分享：一件新入手的卫衣，搭配经典牛仔裤，简约而不失时尚感，轻松打造休闲校园风。', '["#穿搭","#卫衣","#校园风","#日常穿搭"]', '["https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=A%20young%20Asian%20college%20student%20wearing%20a%20casual%20grey%20hoodie%20and%20blue%20jeans%20outfit%2C%20standing%20on%20a%20university%20campus%2C%20full%20body%20fashion%20photo%2C%20soft%20daylight%2C%20clean%20composition&image_size=landscape_4_3"]', 35, 2),
+(1, '操场夜跑打卡', '健身', '今晚跑了5公里，出汗的感觉真舒服！坚持锻炼，保持好身材。', '今晚在操场完成了5公里夜跑，大汗淋漓的感觉真是畅快淋漓！坚持锻炼，保持健康好身材，一起动起来吧！', '["#健身","#夜跑","#运动","#校园生活"]', '["https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=Students%20jogging%20at%20night%20on%20a%20university%20sports%20field%20running%20track%2C%20stadium%20floodlights%20glowing%2C%20dynamic%20motion%2C%20energetic%20atmosphere&image_size=landscape_4_3"]', 19, 0),
+(1, '宿舍游戏开黑', '游戏', '周末和室友一起开黑打游戏，太快乐了！', '周末时光，和室友们一起开黑打游戏，欢声笑语中度过了一段快乐的时光。游戏虽好，也要注意休息哦！', '["#游戏","#室友","#周末","#开黑"]', '["https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=College%20students%20playing%20video%20games%20together%20in%20a%20dorm%20room%2C%20desktop%20monitors%20with%20colorful%20RGB%20lighting%2C%20headphones%2C%20fun%20and%20lively%20atmosphere&image_size=landscape_4_3"]', 23, 1);
 
 -- 评论数据
 INSERT INTO `comment` (`post_id`, `user_id`, `content`) VALUES

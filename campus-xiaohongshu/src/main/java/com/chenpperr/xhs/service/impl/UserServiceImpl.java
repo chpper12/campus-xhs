@@ -50,7 +50,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 .eq(User::getId, userId)
                 .set(dto.getNickname() != null, User::getNickname, dto.getNickname())
                 .set(dto.getBio() != null, User::getBio, dto.getBio())
-                .set(dto.getAvatar() != null, User::getAvatar, dto.getAvatar());
+                .set(dto.getAvatar() != null, User::getAvatar, dto.getAvatar())
+                .set(dto.getPhone() != null, User::getPhone, dto.getPhone())
+                .set(dto.getEmail() != null, User::getEmail, dto.getEmail());
 
         update(updateWrapper);
     }

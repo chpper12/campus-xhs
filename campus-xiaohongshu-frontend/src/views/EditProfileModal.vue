@@ -72,6 +72,27 @@
           show-word-limit
         />
       </el-form-item>
+
+      <!-- 手机号（回填的是后端脱敏后的值，如 138****6789） -->
+      <el-form-item label="手机号" prop="phone">
+        <el-input
+          v-model="form.phone"
+          placeholder="输入11位手机号"
+          maxlength="11"
+          clearable
+        />
+        <p class="text-xs text-gray-400 mt-1">当前展示为脱敏后的号码；不修改则保持原值</p>
+      </el-form-item>
+
+      <!-- 邮箱（回填的是后端脱敏后的值，如 t****@qq.com） -->
+      <el-form-item label="邮箱" prop="email">
+        <el-input
+          v-model="form.email"
+          placeholder="输入邮箱地址"
+          clearable
+        />
+        <p class="text-xs text-gray-400 mt-1">当前展示为脱敏后的邮箱；不修改则保持原值</p>
+      </el-form-item>
     </el-form>
 
     <template #footer>
@@ -116,8 +137,15 @@ const submitting = ref(false)
 const form = reactive({
   avatar: '',
   nickname: '',
-  bio: ''
+  bio: '',
+  phone: '',
+  email: ''
 })
+
+// 打开弹窗时回填的原始值（后端脱敏后的值），用于提交时的脏检查：
+// 只有用户真正修改过的手机号/邮箱才会提交，防止把脱敏值（138****6789）误存回数据库
+const originalPhone = ref('')
+const originalEmail = ref('')
 
 const rules: FormRules = {
   nickname: [
@@ -125,6 +153,40 @@ const rules: FormRules = {
   ],
   bio: [
     { max: 200, message: '简介长度不能超过200个字符', trigger: 'blur' }
+  ],
+  phone: [
+    {
+      validator: (_rule, value: string, callback) => {
+        // 未修改（仍是脱敏原值）或已清空 → 视为不修改，跳过校验
+        if (!value || value === originalPhone.value) {
+          callback()
+          return
+        }
+        if (!/^1[3-9]\d{9}$/.test(value)) {
+          callback(new Error('手机号格式不正确'))
+          return
+        }
+        callback()
+      },
+      trigger: 'blur'
+    }
+  ],
+  email: [
+    {
+      validator: (_rule, value: string, callback) => {
+        // 未修改（仍是脱敏原值）或已清空 → 视为不修改，跳过校验
+        if (!value || value === originalEmail.value) {
+          callback()
+          return
+        }
+        if (!/^[\w.-]+@[\w-]+(\.[\w-]+)+$/.test(value)) {
+          callback(new Error('邮箱格式不正确'))
+          return
+        }
+        callback()
+      },
+      trigger: 'blur'
+    }
   ]
 }
 
@@ -137,12 +199,17 @@ watch(visible, (val) => {
   emit('update:visible', val)
 })
 
-// 打开弹窗时用当前用户资料回填表单
+// 打开弹窗时用当前用户资料回填表单（phone/email 为后端脱敏后的值）
 watch(() => props.visible, (val) => {
   if (val && props.userProfile) {
     form.avatar = props.userProfile.avatar || ''
     form.nickname = props.userProfile.nickname || ''
     form.bio = props.userProfile.bio || ''
+    form.phone = props.userProfile.phone || ''
+    form.email = props.userProfile.email || ''
+    // 记录脱敏原值，用于提交时的脏检查
+    originalPhone.value = form.phone
+    originalEmail.value = form.email
   }
 })
 
@@ -195,6 +262,10 @@ const handleSubmit = async () => {
     if (form.nickname) params.nickname = form.nickname
     if (form.bio) params.bio = form.bio
     if (form.avatar) params.avatar = form.avatar
+    // 脏检查：只有用户真正修改过的手机号/邮箱才提交，
+    // 避免把脱敏值（138****6789）误存回数据库覆盖真实数据
+    if (form.phone && form.phone !== originalPhone.value) params.phone = form.phone
+    if (form.email && form.email !== originalEmail.value) params.email = form.email
 
     await updateProfile(params)
 
@@ -212,6 +283,10 @@ const handleClose = () => {
   form.avatar = ''
   form.nickname = ''
   form.bio = ''
+  form.phone = ''
+  form.email = ''
+  originalPhone.value = ''
+  originalEmail.value = ''
 }
 </script>
 
