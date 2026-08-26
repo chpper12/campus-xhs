@@ -61,6 +61,8 @@ public class FeedServiceImpl implements FeedService {
      */
     @Override
     public void pushToFollowers(Long authorId, Long postId) {
+        long start = System.currentTimeMillis();
+
         // 1. 获取所有粉丝ID（从 Redis Set 读取）
         String followerKey = "user:follower:" + authorId;
         Set<String> followers = redisUtil.sMembers(followerKey);
@@ -93,8 +95,9 @@ public class FeedServiceImpl implements FeedService {
             }
         }
 
-        log.info("Feed推送完成：authorId={}, postId={}, 粉丝数={}, 成功推送={}",
-                authorId, postId, followers.size(), successCount);
+        log.info("Feed推送完成：authorId={}, postId={}, 粉丝数={}, 成功推送={}, 耗时={}ms",
+                authorId, postId, followers.size(), successCount,
+                System.currentTimeMillis() - start);
     }
 
     /**

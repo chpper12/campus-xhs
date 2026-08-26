@@ -28,6 +28,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 
 /**
  * 笔记 业务实现类
@@ -41,16 +42,17 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
     private final UserService userService;
     private final CommentMapper commentMapper;
     private final FeedService feedService;
+    private final ExecutorService feedExecutor;
 
     /**
      * 分页查询笔记列表（返回卡片 VO）
-     *
+     * <p>
      * 流程：
-     *   1. LambdaQueryWrapper 构建查询条件（可选按分类过滤）
-     *   2. 按最新发布时间倒序排列
-     *   3. this.page(page, wrapper) 执行分页查询
-     *   4. 遍历结果，每条 Post 转 PostCardVO（脱敏 + 聚合点赞状态、作者信息）
-     *   5. 封装成 PageResult 返回
+     * 1. LambdaQueryWrapper 构建查询条件（可选按分类过滤）
+     * 2. 按最新发布时间倒序排列
+     * 3. this.page(page, wrapper) 执行分页查询
+     * 4. 遍历结果，每条 Post 转 PostCardVO（脱敏 + 聚合点赞状态、作者信息）
+     * 5. 封装成 PageResult 返回
      *
      * @param page     分页对象
      * @param category 分类过滤条件（可选）
@@ -80,10 +82,10 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
     /**
      * 根据 ID 获取笔记详情
-     *
+     * <p>
      * 流程：
-     *   1. this.getById(id) 查询笔记
-     *   2. 转换为 PostDetailVO（包含图片列表、评论数、点赞状态等）
+     * 1. this.getById(id) 查询笔记
+     * 2. 转换为 PostDetailVO（包含图片列表、评论数、点赞状态等）
      *
      * @param id 笔记ID
      * @return 笔记详情 VO，不存在返回 null
@@ -122,12 +124,12 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
     /**
      * 按关键词搜索笔记（模糊匹配 title 和 content）
-     *
+     * <p>
      * SQL 逻辑：
-     *   SELECT * FROM post
-     *   WHERE status = 1
-     *   AND (title LIKE '%keyword%' OR content LIKE '%keyword%')
-     *   ORDER BY create_time DESC
+     * SELECT * FROM post
+     * WHERE status = 1
+     * AND (title LIKE '%keyword%' OR content LIKE '%keyword%')
+     * ORDER BY create_time DESC
      *
      * @param keyword 搜索关键词
      * @param page    分页对象
@@ -156,11 +158,11 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
     /**
      * 删除笔记（只有作者自己可以删除）
-     *
+     * <p>
      * 流程：
-     *   1. 查出帖子，校验是否存在
-     *   2. 校验当前用户是否是作者（不是作者不能删）
-     *   3. 删除帖子
+     * 1. 查出帖子，校验是否存在
+     * 2. 校验当前用户是否是作者（不是作者不能删）
+     * 3. 删除帖子
      */
     @Override
     public void deletePost(Long postId, Long userId) {
@@ -179,22 +181,23 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         this.removeById(postId);
 
         // 第 4 步：从所有用户的 Feed 中移除该笔记（异步执行，不阻塞删帖）
-        try {
-            feedService.removeFromAllFeeds(postId);
-        } catch (Exception e) {
-            log.warn("从Feed移除笔记失败，不影响删帖结果：{}", e.getMessage());
-        }
-
+        feedExecutor.execute(() -> {
+            try {
+                feedService.removeFromAllFeeds(postId);
+            } catch (Exception e) {
+                log.warn("从Feed移除笔记失败，不影响删帖结果：{}", e.getMessage());
+            }
+        });
         log.info("用户 {} 删除了笔记 {}", userId, postId);
     }
 
     /**
      * 发布笔记
-     *
+     * <p>
      * 流程：
-     *   1. 构造 Post Entity（将图片URL列表转为JSON字符串存储）
-     *   2. this.save(post) 保存到 MySQL（自动回填ID）
-     *   3. 返回新笔记的ID
+     * 1. 构造 Post Entity（将图片URL列表转为JSON字符串存储）
+     * 2. this.save(post) 保存到 MySQL（自动回填ID）
+     * 3. 返回新笔记的ID
      *
      * @param dto    前端提交的笔记参数（title、category、content、imageUrls）
      * @param userId 当前登录用户ID
@@ -218,13 +221,14 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         this.save(post);
 
         // 第 3 步：推送到粉丝的 Feed 流（异步执行，不阻塞发布流程）
-        try {
-            feedService.pushToFollowers(userId, post.getId());
-        } catch (Exception e) {
-            // Feed 推送失败不影响发布结果
-            log.warn("Feed推送失败，不影响笔记发布：{}", e.getMessage());
-        }
-
+        feedExecutor.execute(() -> {
+            try {
+                feedService.pushToFollowers(userId, post.getId());
+            } catch (Exception e) {
+                // Feed 推送失败不影响发布结果
+                log.warn("Feed推送失败，不影响笔记发布：{}", e.getMessage());
+            }
+        });
         // 第 4 步：返回笔记 ID
         return post.getId();
     }
@@ -233,12 +237,12 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
     /**
      * 将 Post 实体转换为列表卡片 VO
-     *
+     * <p>
      * 转换逻辑：
-     *   1. 脱敏：只取 id / title / category / likeCount / createTime
-     *   2. coverUrl：从 imageUrls JSON 数组取第一张图作为封面
-     *   3. liked：查 Redis Hash 判断当前用户是否点赞
-     *   4. author：查 User 表拿 nickname + avatar
+     * 1. 脱敏：只取 id / title / category / likeCount / createTime
+     * 2. coverUrl：从 imageUrls JSON 数组取第一张图作为封面
+     * 3. liked：查 Redis Hash 判断当前用户是否点赞
+     * 4. author：查 User 表拿 nickname + avatar
      *
      * @param post 笔记实体
      * @return 列表卡片 VO
@@ -274,13 +278,13 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
     /**
      * 将 Post 实体转换为笔记详情 VO
-     *
+     * <p>
      * 转换逻辑：
-     *   1. 脱敏：去掉 status 字段
-     *   2. JSON → List：imageUrls 从 JSON 字符串解析为 List<String>
-     *   3. liked：查 Redis
-     *   4. author：查 User 表
-     *   5. commentCount：查 Comment 表获取实时评论数
+     * 1. 脱敏：去掉 status 字段
+     * 2. JSON → List：imageUrls 从 JSON 字符串解析为 List<String>
+     * 3. liked：查 Redis
+     * 4. author：查 User 表
+     * 5. commentCount：查 Comment 表获取实时评论数
      *
      * @param post 笔记实体
      * @return 笔记详情 VO
@@ -354,7 +358,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
     /**
      * JSON 数组字符串 → List<String>，解析失败返回空列表
-     *
+     * <p>
      * 使用 Hutool 的 JSONUtil.toList，比手动 split 更安全（能处理转义字符等边界情况）
      *
      * @param json JSON 数组字符串
