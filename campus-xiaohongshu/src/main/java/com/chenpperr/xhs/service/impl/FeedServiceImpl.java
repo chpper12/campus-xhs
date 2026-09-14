@@ -1,10 +1,10 @@
 package com.chenpperr.xhs.service.impl;
 
-import com.chenpperr.xhs.entity.Post;
+import com.chenpperr.xhs.domain.entity.Post;
 import com.chenpperr.xhs.service.FeedService;
 import com.chenpperr.xhs.service.PostService;
 import com.chenpperr.xhs.util.RedisUtil;
-import com.chenpperr.xhs.vo.PostCardVO;
+import com.chenpperr.xhs.domain.vo.PostCardVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,10 +12,8 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * Feed 流 业务实现类

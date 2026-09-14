@@ -40,26 +40,7 @@
     <!-- 主体内容 -->
     <div class="pt-16 flex">
       <!-- 左侧固定侧边栏 -->
-      <aside class="fixed left-0 top-16 bottom-0 w-60 bg-white border-r border-gray-100 overflow-y-auto">
-        <nav class="py-4">
-          <div
-            v-for="item in menuItems"
-            :key="item.key"
-            :class="[
-              'flex items-center gap-3 px-6 py-3 cursor-pointer transition-colors',
-              activeMenu === item.key
-                ? 'bg-red-50 text-primary border-r-2 border-primary'
-                : 'text-gray-600 hover:bg-gray-50'
-            ]"
-            @click="handleMenuClick(item)"
-          >
-            <el-icon :size="20">
-              <component :is="item.icon" />
-            </el-icon>
-            <span class="font-medium">{{ item.label }}</span>
-          </div>
-        </nav>
-      </aside>
+      <AppSidebar @published="handlePublished" />
 
       <!-- 右侧主内容区 -->
       <main class="ml-60 flex-1 p-6">
@@ -250,7 +231,7 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { House, Loading, Document, Bell, User, Edit, Delete, Iphone, Message } from '@element-plus/icons-vue'
+import { House, Loading, Document, Edit, Delete, Iphone, Message } from '@element-plus/icons-vue'
 import {
   getUserProfile,
   getUserPosts,
@@ -261,6 +242,7 @@ import {
 } from '@/api/user'
 import { likePost, getMyLikedPosts, deletePost } from '@/api/posts'
 import { useUserStore } from '@/stores/user'
+import AppSidebar from '@/components/AppSidebar.vue'
 import PostDetailModal from './PostDetailModal.vue'
 import EditProfileModal from './EditProfileModal.vue'
 
@@ -268,23 +250,12 @@ const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
 
-// ======================== 侧边栏 ========================
-const menuItems = [
-  { key: 'discover', label: '发现', icon: House },
-  { key: 'publish', label: '发布', icon: Edit },
-  { key: 'notification', label: '通知', icon: Bell },
-  { key: 'profile', label: '我', icon: User }
-]
-
-const activeMenu = ref('profile')
-
-const handleMenuClick = (item: { key: string }) => {
-  if (item.key === 'discover') {
-    router.push('/')
-  } else if (item.key === 'profile') {
-    if (userStore.userId) {
-      router.push(`/profile/${userStore.userId}`)
-    }
+// 发布成功（来自侧边栏发布弹窗）：自己的主页刷新资料和帖子列表
+const handlePublished = () => {
+  const userId = Number(route.params.userId)
+  if (userId && userId === userStore.userId) {
+    fetchProfile(userId)
+    fetchPosts(true)
   }
 }
 
@@ -571,22 +542,5 @@ onUnmounted(() => {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-}
-
-aside::-webkit-scrollbar {
-  width: 4px;
-}
-
-aside::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-aside::-webkit-scrollbar-thumb {
-  background: #e5e7eb;
-  border-radius: 2px;
-}
-
-aside::-webkit-scrollbar-thumb:hover {
-  background: #d1d5db;
 }
 </style>

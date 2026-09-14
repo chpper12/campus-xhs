@@ -3,8 +3,8 @@ package com.chenpperr.xhs.service;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.chenpperr.xhs.common.PageResult;
-import com.chenpperr.xhs.entity.Comment;
-import com.chenpperr.xhs.vo.CommentVO;
+import com.chenpperr.xhs.domain.entity.Comment;
+import com.chenpperr.xhs.domain.vo.CommentVO;
 
 /**
  * 评论 Service 接口

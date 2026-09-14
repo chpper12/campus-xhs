@@ -5,7 +5,7 @@ import com.chenpperr.xhs.common.PageResult;
 import com.chenpperr.xhs.common.Result;
 import com.chenpperr.xhs.service.FollowService;
 import com.chenpperr.xhs.util.SecurityUtil;
-import com.chenpperr.xhs.vo.FollowUserVO;
+import com.chenpperr.xhs.domain.vo.FollowUserVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;

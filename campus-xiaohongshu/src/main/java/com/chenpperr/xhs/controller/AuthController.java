@@ -2,7 +2,7 @@ package com.chenpperr.xhs.controller;
 
 import com.chenpperr.xhs.common.Result;
 import com.chenpperr.xhs.common.ResultCode;
-import com.chenpperr.xhs.entity.User;
+import com.chenpperr.xhs.domain.entity.User;
 import com.chenpperr.xhs.security.JwtUtil;
 import com.chenpperr.xhs.security.LoginDTO;
 import com.chenpperr.xhs.security.LoginVO;

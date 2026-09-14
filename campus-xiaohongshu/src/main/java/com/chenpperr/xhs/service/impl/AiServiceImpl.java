@@ -11,7 +11,7 @@ import com.chenpperr.xhs.config.AiConfig;
 import com.chenpperr.xhs.exception.BusinessException;
 import com.chenpperr.xhs.common.ResultCode;
 import com.chenpperr.xhs.service.AiService;
-import com.chenpperr.xhs.vo.AiPolishVO;
+import com.chenpperr.xhs.domain.vo.AiPolishVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

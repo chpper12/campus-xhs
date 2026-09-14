@@ -2,7 +2,7 @@ package com.chenpperr.xhs.controller;
 
 import com.chenpperr.xhs.common.Result;
 import com.chenpperr.xhs.service.OssService;
-import com.chenpperr.xhs.vo.UploadVO;
+import com.chenpperr.xhs.domain.vo.UploadVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PostMapping;

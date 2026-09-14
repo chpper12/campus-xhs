@@ -1,7 +1,7 @@
 package com.chenpperr.xhs.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.chenpperr.xhs.entity.Follow;
+import com.chenpperr.xhs.domain.entity.Follow;
 import org.apache.ibatis.annotations.Mapper;
 
 /**

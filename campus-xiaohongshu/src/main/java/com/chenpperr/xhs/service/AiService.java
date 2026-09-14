@@ -1,6 +1,6 @@
 package com.chenpperr.xhs.service;
 
-import com.chenpperr.xhs.vo.AiPolishVO;
+import com.chenpperr.xhs.domain.vo.AiPolishVO;
 
 /**
  * AI润色服务接口

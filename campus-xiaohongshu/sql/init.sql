@@ -23,6 +23,7 @@ CREATE TABLE `user` (
     `phone`       VARCHAR(20)  NOT NULL DEFAULT '' COMMENT '手机号',
     `email`       Varchar(100) Not Null DEFAULT '' COMMENT '邮箱',
     `status`      TINYINT      NOT NULL DEFAULT 1 COMMENT '状态：0-禁用 1-正常',
+    `balance`     DECIMAL(10,2) NOT NULL DEFAULT 10000.00 COMMENT '模拟钱包余额',
     `create_time` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `update_time` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (`id`),
@@ -37,7 +38,7 @@ CREATE TABLE `post` (
     `id`               BIGINT        NOT NULL AUTO_INCREMENT COMMENT '笔记ID',
     `user_id`          BIGINT        NOT NULL COMMENT '作者ID',
     `title`            VARCHAR(100)  NOT NULL COMMENT '笔记标题',
-    `category`         VARCHAR(20)   NOT NULL DEFAULT '推荐' COMMENT '分区：推荐/穿搭/美食/职场/情感/家居/游戏/旅行/健身/视频',
+    `category`         VARCHAR(20)   NOT NULL DEFAULT '推荐' COMMENT '分区：推荐/学习/生活/职业/美食/运动/穿搭/数码/美妆/游戏/娱乐/情感/宠物/兴趣/活动/求助/吐槽',
     `content`          TEXT          NOT NULL COMMENT '用户原始内容',
     `polished_content` TEXT          DEFAULT NULL COMMENT 'AI润色后的内容',
     `tags`             VARCHAR(500)  DEFAULT NULL COMMENT 'AI提取的标签，JSON数组格式',
@@ -116,35 +117,75 @@ CREATE TABLE `notice` (
     KEY `idx_create_time` (`create_time` DESC)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='通知表';
 
+
+-- =====================================================
+-- 7. 二手商品表
+-- =====================================================
+DROP TABLE IF EXISTS `market_item`;
+CREATE TABLE `market_item` (
+                               `id`           BIGINT         NOT NULL AUTO_INCREMENT COMMENT '商品ID',
+                               `seller_id`    BIGINT         NOT NULL COMMENT '卖家用户ID(关联 user.id)',
+                               `title`        VARCHAR(100)   NOT NULL COMMENT '商品标题',
+                               `description`  TEXT           DEFAULT NULL COMMENT '商品详细描述',
+                               `price`        DECIMAL(10,2)  NOT NULL COMMENT '价格',
+                               `cover_url`    VARCHAR(500)   NOT NULL DEFAULT '' COMMENT '封面图片URL',
+                               `image_urls`   TEXT           DEFAULT NULL COMMENT '详情图片URL列表，JSON数组格式',
+                               `contact_info` VARCHAR(100)   NOT NULL DEFAULT '' COMMENT '卖家联系方式(微信/电话)',
+                               `status`       TINYINT        NOT NULL DEFAULT 0 COMMENT '状态: 0-待售, 1-锁定中(已下单未支付), 2-已售出, 3-已下架',
+                               `create_time`  DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+                               `update_time`  DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+                               PRIMARY KEY (`id`),
+                               KEY `idx_seller_id` (`seller_id`),
+                               KEY `idx_status` (`status`),
+                               KEY `idx_create_time` (`create_time` DESC)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='校园市集商品表';
+
+-- =====================================================
+-- 8. 订单表
+-- =====================================================
+DROP TABLE IF EXISTS `market_order`;
+CREATE TABLE `market_order` (
+                                `id`          BIGINT        NOT NULL AUTO_INCREMENT COMMENT '订单ID',
+                                `order_sn`    VARCHAR(64)   NOT NULL COMMENT '唯一订单号',
+                                `item_id`     BIGINT        NOT NULL COMMENT '商品ID(关联 market_item.id)',
+                                `buyer_id`    BIGINT        NOT NULL COMMENT '买家用户ID(关联 user.id)',
+                                `seller_id`   BIGINT        NOT NULL COMMENT '卖家用户ID(关联 user.id)',
+                                `amount`      DECIMAL(10,2) NOT NULL COMMENT '交易金额',
+                                `status`      TINYINT       NOT NULL DEFAULT 0 COMMENT '订单状态: 0-待支付, 1-已完成(已支付), 2-已取消(超时/手动)',
+                                `pay_time`    DATETIME      DEFAULT NULL COMMENT '支付时间',
+                                `create_time` DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+                                `update_time` DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+                                PRIMARY KEY (`id`),
+                                UNIQUE KEY `uk_order_sn` (`order_sn`),
+                                KEY `idx_buyer_id` (`buyer_id`),
+                                KEY `idx_seller_id` (`seller_id`),
+                                KEY `idx_item_id` (`item_id`),
+                                KEY `idx_create_time` (`create_time` DESC)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='校园市集订单表';
+
+
 -- =====================================================
 -- 预置测试数据
+-- 说明：
+--   1. 仅预置 6 个测试用户（初始密码均为 123456，BCrypt 加密存储）
+--   2. 帖子/评论/点赞/关注/通知等业务数据不再预置，
+--      由用户登录系统后手动操作产生，保证数据天然真实一致
 -- =====================================================
 
--- 用户数据
-INSERT INTO `user` (`id`, `username`, `password`, `nickname`, `avatar`,`phone`,`email`) VALUES
+-- 用户数据（id: 1~6，头像为空，前端展示默认占位图；后续接入 OSS 后可上传真实头像）
+INSERT INTO `user` (`id`, `username`, `password`, `nickname`, `avatar`, `bio`, `phone`, `email`) VALUES
 (1, 'test', '$2a$10$Zuhr9bmp3RTmJMIC93Jaeu.WQ1TTg1RY9HjVo/TMjZupz1UZNx3Uq',
- '测试用户',
- 'https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=Portrait%20headshot%20of%20a%20friendly%20young%20Chinese%20college%20student%2C%20gentle%20smile%2C%20soft%20studio%20lighting%2C%20clean%20light%20background%2C%20avatar%20photo&image_size=square_hd',
-'13812346789',
-'test@qq.com');
-
--- 笔记数据
-INSERT INTO `post` (`user_id`, `title`, `category`, `content`, `polished_content`, `tags`, `image_urls`, `like_count`, `comment_count`) VALUES
-(1, '食堂新品红烧肉测评', '美食', '今天去食堂发现了一个超好吃的窗口，红烧肉特别香，强烈推荐！', '今天漫步校园食堂，意外发现了一个令人惊喜的美食窗口。那里的红烧肉色泽红润，香气四溢，让人垂涎欲滴。强烈推荐给各位同学！', '["#食堂","#美食","#红烧肉","#校园生活"]', '["https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=A%20delicious%20braised%20pork%20belly%20rice%20bowl%20served%20in%20a%20Chinese%20university%20cafeteria%2C%20glossy%20caramelized%20meat%2C%20steamed%20rice%20and%20greens%2C%20appetizing%20food%20photography%2C%20warm%20natural%20lighting%2C%20close-up%20shot&image_size=landscape_4_3"]', 42, 3),
-(1, '图书馆自习打卡', '推荐', '图书馆五楼靠窗位置太棒了，阳光正好，学习效率翻倍！', '图书馆五楼靠窗的位置简直是学习的绝佳圣地。温暖的阳光洒在书桌上，让人心情愉悦，学习效率也随之翻倍。强烈推荐！', '["#图书馆","#自习","#学习","#校园生活"]', '["https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=A%20bright%20modern%20university%20library%20interior%2C%20students%20studying%20quietly%20at%20wooden%20desks%20near%20large%20windows%2C%20warm%20sunlight%20streaming%20in%2C%20bookshelves%20in%20the%20background%2C%20cozy%20academic%20atmosphere&image_size=landscape_4_3"]', 28, 1),
-(1, '今日穿搭分享', '穿搭', '今天穿了新买的卫衣，搭配牛仔裤，简约又好看～', '今日穿搭分享：一件新入手的卫衣，搭配经典牛仔裤，简约而不失时尚感，轻松打造休闲校园风。', '["#穿搭","#卫衣","#校园风","#日常穿搭"]', '["https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=A%20young%20Asian%20college%20student%20wearing%20a%20casual%20grey%20hoodie%20and%20blue%20jeans%20outfit%2C%20standing%20on%20a%20university%20campus%2C%20full%20body%20fashion%20photo%2C%20soft%20daylight%2C%20clean%20composition&image_size=landscape_4_3"]', 35, 2),
-(1, '操场夜跑打卡', '健身', '今晚跑了5公里，出汗的感觉真舒服！坚持锻炼，保持好身材。', '今晚在操场完成了5公里夜跑，大汗淋漓的感觉真是畅快淋漓！坚持锻炼，保持健康好身材，一起动起来吧！', '["#健身","#夜跑","#运动","#校园生活"]', '["https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=Students%20jogging%20at%20night%20on%20a%20university%20sports%20field%20running%20track%2C%20stadium%20floodlights%20glowing%2C%20dynamic%20motion%2C%20energetic%20atmosphere&image_size=landscape_4_3"]', 19, 0),
-(1, '宿舍游戏开黑', '游戏', '周末和室友一起开黑打游戏，太快乐了！', '周末时光，和室友们一起开黑打游戏，欢声笑语中度过了一段快乐的时光。游戏虽好，也要注意休息哦！', '["#游戏","#室友","#周末","#开黑"]', '["https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=College%20students%20playing%20video%20games%20together%20in%20a%20dorm%20room%2C%20desktop%20monitors%20with%20colorful%20RGB%20lighting%2C%20headphones%2C%20fun%20and%20lively%20atmosphere&image_size=landscape_4_3"]', 23, 1);
-
--- 评论数据
-INSERT INTO `comment` (`post_id`, `user_id`, `content`) VALUES
-(1, 1, '红烧肉yyds！'),
-(1, 3, '这个窗口在哪里呀？求具体位置！'),
-(1, 2, '看起来好好吃！明天也去尝尝～'),
-(2, 2, '五楼确实安静，推荐！'),
-(3, 1, '好看！求链接～'),
-(3, 3, '简约风太赞了！'),
-(5, 2, '什么游戏？带我一个！');
+ '测试用户', '', '热爱编程，分享校园生活~', '13812346789', 'test@qq.com'),
+(2, 'test2', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIUi',
+ '测试用户2', '', '美食探店达人 | 干饭不积极思想有问题', '13922334455', 'test2@163.com'),
+(3, 'test3', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIUi',
+ '测试用户3', '', '计算机学院大三 | 健身 篮球 夜跑爱好者', '13633445566', 'test3@gmail.com'),
+(4, 'test4', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIUi',
+ '测试用户4', '', '泡图书馆的考研人 | 分享穿搭和学习日常', '13744556677', 'test4@qq.com'),
+(5, 'test5', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIUi',
+ '测试用户5', '', '游戏区常驻玩家 | 开黑滴滴我', '13855667788', 'test5@126.com'),
+(6, 'test6', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIUi',
+ '测试用户6', '', '大一新生 | 正在努力熟悉校园中~', '13966778899', 'test6@qq.com');
 
 -- =====================================================
 -- 完成！

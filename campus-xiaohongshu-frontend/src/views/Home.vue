@@ -34,7 +34,7 @@
 
         <!-- 右侧用户头像 -->
         <div class="flex items-center gap-4">
-          <el-button type="primary" @click="showPublish = true">
+          <el-button type="primary" @click="sidebarRef?.openPublish()">
             <el-icon class="mr-1"><Plus /></el-icon>
             发布
           </el-button>
@@ -80,26 +80,7 @@
     <!-- 主体内容 -->
     <div class="pt-16 flex">
       <!-- 左侧固定侧边栏 -->
-      <aside class="fixed left-0 top-16 bottom-0 w-60 bg-white border-r border-gray-100 overflow-y-auto">
-        <nav class="py-4">
-          <div
-            v-for="item in menuItems"
-            :key="item.key"
-            :class="[
-              'flex items-center gap-3 px-6 py-3 cursor-pointer transition-colors',
-              activeMenu === item.key
-                ? 'bg-red-50 text-primary border-r-2 border-primary'
-                : 'text-gray-600 hover:bg-gray-50'
-            ]"
-            @click="handleMenuClick(item)"
-          >
-            <el-icon :size="20">
-              <component :is="item.icon" />
-            </el-icon>
-            <span class="font-medium">{{ item.label }}</span>
-          </div>
-        </nav>
-      </aside>
+      <AppSidebar ref="sidebarRef" @published="handlePublishSuccess" />
 
       <!-- 右侧主内容区 -->
       <main class="ml-60 flex-1 p-6">
@@ -195,9 +176,6 @@
       </main>
     </div>
 
-    <!-- 发布弹窗 -->
-    <PublishModal v-model:visible="showPublish" @success="handlePublishSuccess" />
-
     <!-- 详情弹窗 -->
     <PostDetailModal
       v-model:visible="showDetail"
@@ -211,46 +189,25 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { Plus, Loading, Document, House, Bell, User, Edit, SwitchButton } from '@element-plus/icons-vue'
+import { Plus, Loading, Document, User, SwitchButton } from '@element-plus/icons-vue'
 import { getPosts, likePost, type Post } from '@/api/posts'
 import { getUserProfile, type UserProfile } from '@/api/user'
 import { useUserStore } from '@/stores/user'
-import PublishModal from './PublishModal.vue'
+import AppSidebar from '@/components/AppSidebar.vue'
 import PostDetailModal from './PostDetailModal.vue'
 
 const router = useRouter()
 const userStore = useUserStore()
 
-// 菜单项
-const menuItems = [
-  { key: 'discover', label: '发现', icon: House },
-  { key: 'publish', label: '发布', icon: Edit },
-  { key: 'notification', label: '通知', icon: Bell },
-  { key: 'profile', label: '我', icon: User }
-]
-
-// 侧边栏点击
-const handleMenuClick = (item: { key: string }) => {
-  activeMenu.value = item.key
-  if (item.key === 'publish') {
-    showPublish.value = true
-  } else if (item.key === 'profile') {
-    if (userStore.userId) {
-      router.push(`/profile/${userStore.userId}`)
-    }
-  } else if (item.key === 'notification') {
-    router.push('/notifications')
-  }
-}
-
 // 分类
 const categories = [
-  '全部', '教育', '穿搭', '美食', '彩妆',
-  '影视', '游戏', '职场', '情感', '萌宠'
+  '全部', '学习', '生活', '职业', '美食', '运动',
+  '穿搭', '数码', '美妆', '游戏', '娱乐', '情感',
+  '宠物', '兴趣', '活动', '求助', '吐槽'
 ]
 
 // 状态
-const activeMenu = ref('discover')
+const sidebarRef = ref<InstanceType<typeof AppSidebar>>()
 const activeCategory = ref('全部')
 const searchQuery = ref('')
 const currentUser = ref<UserProfile | null>(null)
@@ -260,7 +217,6 @@ const posts = ref<Post[]>([])
 const loading = ref(false)
 const page = ref(1)
 const pageSize = 20
-const showPublish = ref(false)
 const showDetail = ref(false)
 const currentPost = ref<Post>({
   id: 0,
@@ -392,7 +348,7 @@ const handleDetailLike = (post: Post) => {
   }
 }
 
-// 发布成功
+// 发布成功（来自侧边栏发布弹窗）
 const handlePublishSuccess = () => {
   fetchPosts(true)
 }
@@ -427,24 +383,6 @@ onUnmounted(() => {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-}
-
-/* 自定义滚动条 */
-aside::-webkit-scrollbar {
-  width: 4px;
-}
-
-aside::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-aside::-webkit-scrollbar-thumb {
-  background: #e5e7eb;
-  border-radius: 2px;
-}
-
-aside::-webkit-scrollbar-thumb:hover {
-  background: #d1d5db;
 }
 
 /* 下拉菜单动画 */

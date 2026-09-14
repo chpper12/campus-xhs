@@ -5,15 +5,15 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.chenpperr.xhs.common.PageResult;
 import com.chenpperr.xhs.common.ResultCode;
-import com.chenpperr.xhs.entity.Follow;
-import com.chenpperr.xhs.entity.User;
+import com.chenpperr.xhs.domain.entity.Follow;
+import com.chenpperr.xhs.domain.entity.User;
 import com.chenpperr.xhs.exception.BusinessException;
 import com.chenpperr.xhs.mapper.FollowMapper;
 import com.chenpperr.xhs.service.FollowService;
 import com.chenpperr.xhs.service.NoticeService;
 import com.chenpperr.xhs.service.UserService;
 import com.chenpperr.xhs.util.RedisUtil;
-import com.chenpperr.xhs.vo.FollowUserVO;
+import com.chenpperr.xhs.domain.vo.FollowUserVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -21,8 +21,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * 关注关系 业务实现类

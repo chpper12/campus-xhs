@@ -3,10 +3,10 @@ package com.chenpperr.xhs.service;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.chenpperr.xhs.common.PageResult;
-import com.chenpperr.xhs.dto.PostPublishDTO;
-import com.chenpperr.xhs.entity.Post;
-import com.chenpperr.xhs.vo.PostCardVO;
-import com.chenpperr.xhs.vo.PostDetailVO;
+import com.chenpperr.xhs.domain.dto.PostPublishDTO;
+import com.chenpperr.xhs.domain.entity.Post;
+import com.chenpperr.xhs.domain.vo.PostCardVO;
+import com.chenpperr.xhs.domain.vo.PostDetailVO;
 
 /**
  * 笔记 业务接口

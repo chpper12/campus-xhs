@@ -1,7 +1,7 @@
 package com.chenpperr.xhs.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.chenpperr.xhs.entity.Comment;
+import com.chenpperr.xhs.domain.entity.Comment;
 import org.apache.ibatis.annotations.Mapper;
 
 /**

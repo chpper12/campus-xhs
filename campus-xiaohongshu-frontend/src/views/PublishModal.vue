@@ -174,7 +174,7 @@ const submitting = ref(false)
 const aiLoading = ref(false)
 const imageUrlInput = ref('')
 
-const categories = ['推荐', '教育', '穿搭', '美食', '彩妆', '影视', '游戏', '职场', '情感', '萌宠']
+const categories = ['推荐', '学习', '生活', '职业', '美食', '运动', '穿搭', '数码', '美妆', '游戏', '娱乐', '情感', '宠物', '兴趣', '活动', '求助', '吐槽']
 
 const form = reactive({
   title: '',

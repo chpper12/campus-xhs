@@ -1,10 +1,9 @@
 package com.chenpperr.xhs.controller;
 
-import com.chenpperr.xhs.common.PageResult;
 import com.chenpperr.xhs.common.Result;
 import com.chenpperr.xhs.service.FeedService;
 import com.chenpperr.xhs.util.SecurityUtil;
-import com.chenpperr.xhs.vo.PostCardVO;
+import com.chenpperr.xhs.domain.vo.PostCardVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;

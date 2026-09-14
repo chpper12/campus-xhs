@@ -1,8 +1,8 @@
 package com.chenpperr.xhs.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.chenpperr.xhs.dto.UpdateUserDTO;
-import com.chenpperr.xhs.entity.User;
+import com.chenpperr.xhs.domain.dto.UpdateUserDTO;
+import com.chenpperr.xhs.domain.entity.User;
 import com.chenpperr.xhs.security.LoginVO;
 import com.chenpperr.xhs.security.RegisterDTO;
 

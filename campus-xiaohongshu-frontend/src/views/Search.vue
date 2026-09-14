@@ -45,26 +45,7 @@
     <!-- 主体内容 -->
     <div class="pt-16 flex">
       <!-- 左侧固定侧边栏 -->
-      <aside class="fixed left-0 top-16 bottom-0 w-60 bg-white border-r border-gray-100 overflow-y-auto">
-        <nav class="py-4">
-          <div
-            v-for="item in menuItems"
-            :key="item.key"
-            :class="[
-              'flex items-center gap-3 px-6 py-3 cursor-pointer transition-colors',
-              activeMenu === item.key
-                ? 'bg-red-50 text-primary border-r-2 border-primary'
-                : 'text-gray-600 hover:bg-gray-50'
-            ]"
-            @click="handleMenuClick(item)"
-          >
-            <el-icon :size="20">
-              <component :is="item.icon" />
-            </el-icon>
-            <span class="font-medium">{{ item.label }}</span>
-          </div>
-        </nav>
-      </aside>
+      <AppSidebar />
 
       <!-- 右侧主内容区 -->
       <main class="ml-60 flex-1 p-6">
@@ -163,36 +144,13 @@
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { Loading, House, Bell, User, Edit, Search } from '@element-plus/icons-vue'
+import { Loading, House, Search } from '@element-plus/icons-vue'
 import { searchPosts, likePost, type Post } from '@/api/posts'
-import { useUserStore } from '@/stores/user'
+import AppSidebar from '@/components/AppSidebar.vue'
 import PostDetailModal from './PostDetailModal.vue'
 
 const route = useRoute()
 const router = useRouter()
-const userStore = useUserStore()
-
-// 菜单项
-const menuItems = [
-  { key: 'discover', label: '发现', icon: House },
-  { key: 'publish', label: '发布', icon: Edit },
-  { key: 'notification', label: '通知', icon: Bell },
-  { key: 'profile', label: '我', icon: User }
-]
-
-const activeMenu = ref('')
-
-const handleMenuClick = (item: { key: string }) => {
-  if (item.key === 'discover') {
-    router.push('/')
-  } else if (item.key === 'profile') {
-    if (userStore.userId) {
-      router.push(`/profile/${userStore.userId}`)
-    }
-  } else if (item.key === 'notification') {
-    router.push('/notifications')
-  }
-}
 
 // 搜索状态
 const keyword = ref('')
@@ -331,23 +289,5 @@ onUnmounted(() => {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-}
-
-/* 自定义滚动条 */
-aside::-webkit-scrollbar {
-  width: 4px;
-}
-
-aside::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-aside::-webkit-scrollbar-thumb {
-  background: #e5e7eb;
-  border-radius: 2px;
-}
-
-aside::-webkit-scrollbar-thumb:hover {
-  background: #d1d5db;
 }
 </style>

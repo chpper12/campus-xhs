@@ -1,6 +1,6 @@
 package com.chenpperr.xhs.service;
 
-import com.chenpperr.xhs.vo.PostCardVO;
+import com.chenpperr.xhs.domain.vo.PostCardVO;
 
 import java.util.List;
 

@@ -1,8 +1,8 @@
 package com.chenpperr.xhs.task;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.chenpperr.xhs.entity.Post;
-import com.chenpperr.xhs.entity.PostLike;
+import com.chenpperr.xhs.domain.entity.Post;
+import com.chenpperr.xhs.domain.entity.PostLike;
 import com.chenpperr.xhs.mapper.PostLikeMapper;
 import com.chenpperr.xhs.mapper.PostMapper;
 import com.chenpperr.xhs.service.LikeService;
