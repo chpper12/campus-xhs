@@ -5,13 +5,14 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.chenpperr.xhs.common.Result;
 import com.chenpperr.xhs.market.domain.dto.MarketOrderCreateDTO;
 import com.chenpperr.xhs.market.domain.entity.MarketOrder;
+import com.chenpperr.xhs.market.domain.vo.MarketOrderVO;
 import com.chenpperr.xhs.market.service.MarketOrderService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/market/orders")
+@RequestMapping("/api/v1/market/orders")
 @RequiredArgsConstructor
 public class MarketOrderController {
 
@@ -38,15 +39,15 @@ public class MarketOrderController {
         return Result.success(success);
     }
 
-    //买卖记录
+    //买卖记录（VO 含商品标题/封面、交易对方昵称头像，前端一次请求即可渲染）
     @GetMapping("/my")
-    public Result<Page<MarketOrder>> getMyOrders(
+    public Result<Page<MarketOrderVO>> getMyOrders(
             @RequestParam(defaultValue = "1") Integer pageNum,
             @RequestParam(defaultValue = "10") Integer pageSize,
             @RequestParam(required = false) String type){
 
         Page<MarketOrder> pageParam = new Page<>(pageNum, pageSize);
-        Page<MarketOrder> page = marketOrderService.getMyOrders(pageParam, type);
+        Page<MarketOrderVO> page = marketOrderService.getMyOrders(pageParam, type);
         return Result.success(page);
     }
 

@@ -39,6 +39,24 @@ const router = createRouter({
       name: 'Notifications',
       component: () => import('@/views/Notifications.vue'),
       meta: { requiresAuth: true }
+    },
+    {
+      path: '/market',
+      name: 'Market',
+      component: () => import('@/views/market/MarketList.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/market/item/:id',
+      name: 'MarketItemDetail',
+      component: () => import('@/views/market/MarketDetail.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/market/orders',
+      name: 'MyOrders',
+      component: () => import('@/views/market/MyOrders.vue'),
+      meta: { requiresAuth: true }
     }
   ]
 })

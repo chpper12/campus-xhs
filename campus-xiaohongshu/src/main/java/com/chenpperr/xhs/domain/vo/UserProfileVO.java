@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 
 /**
  * 用户资料视图对象（个人主页用）
@@ -71,4 +72,9 @@ public class UserProfileVO implements Serializable {
      * 当前登录用户是否已关注此人（查看他人主页时有效，查看自己主页时为 null）
      */
     private Boolean isFollowed;
+
+    /**
+     * 钱包余额（仅查看自己主页时返回，查看他人主页时为 null）
+     */
+    private BigDecimal balance;
 }

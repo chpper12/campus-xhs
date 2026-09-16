@@ -1,14 +1,10 @@
 package com.chenpperr.xhs.controller;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.chenpperr.xhs.common.PageResult;
 import com.chenpperr.xhs.common.Result;
-import com.chenpperr.xhs.common.ResultCode;
 import com.chenpperr.xhs.domain.dto.UpdateUserDTO;
 import com.chenpperr.xhs.domain.entity.Post;
-import com.chenpperr.xhs.domain.entity.User;
-import com.chenpperr.xhs.service.FollowService;
 import com.chenpperr.xhs.service.PostService;
 import com.chenpperr.xhs.service.UserService;
 import com.chenpperr.xhs.util.SecurityUtil;
@@ -27,7 +23,6 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     private final UserService userService;
-    private final FollowService followService;
     private final PostService postService;
 
     /**
@@ -36,46 +31,14 @@ public class UserController {
      *
      * 返回用户基本信息 + 统计数据（笔记数、关注数、粉丝数）
      * 如果当前用户已登录且查看的是他人主页，还会返回 isFollowed 状态
+     * 钱包余额 balance 仅在查看自己主页时返回，其他情况为 null
      *
      * @param userId 目标用户ID
      * @return 用户资料 VO
      */
     @GetMapping("/{userId}")
     public Result<UserProfileVO> getUserProfile(@PathVariable("userId") Long userId) {
-        // 1. 查询用户是否存在
-        User user = userService.getById(userId);
-        if (user == null) {
-            return Result.error(ResultCode.NOT_FOUND, "用户不存在");
-        }
-
-        // 2. 查询统计数据
-        Long postCount = postService.count(
-                new LambdaQueryWrapper<Post>().eq(Post::getUserId, userId));
-        Long followingCount = followService.getFollowingCount(userId);
-        Long followerCount = followService.getFollowerCount(userId);
-
-        // 3. 判断当前登录用户是否已关注此人（未登录或查看自己时为 null）
-        Boolean isFollowed = null;
-        Long currentUserId = SecurityUtil.getCurrentUserIdOrNull();
-        if (currentUserId != null && !currentUserId.equals(userId)) {
-            isFollowed = followService.isFollowing(currentUserId, userId);
-        }
-
-        // 4. 组装 VO
-        UserProfileVO vo = UserProfileVO.builder()
-                .userId(user.getId())
-                .nickname(user.getNickname())
-                .avatar(user.getAvatar())
-                .bio(user.getBio())
-                .phone(user.getPhone())
-                .email(user.getEmail())
-                .postCount(postCount)
-                .followingCount(followingCount)
-                .followerCount(followerCount)
-                .isFollowed(isFollowed)
-                .build();
-
-        return Result.success(vo);
+        return Result.success(userService.getUserProfile(userId));
     }
 
     /**

@@ -8,24 +8,33 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.chenpperr.xhs.common.ResultCode;
 import com.chenpperr.xhs.domain.entity.User;
+import com.chenpperr.xhs.domain.vo.UserSimpleVO;
 import com.chenpperr.xhs.exception.BusinessException;
 import com.chenpperr.xhs.mapper.UserMapper;
+import com.chenpperr.xhs.market.config.RabbitMQConfig;
 import com.chenpperr.xhs.market.domain.dto.MarketOrderCreateDTO;
 import com.chenpperr.xhs.market.domain.entity.MarketItem;
 import com.chenpperr.xhs.market.domain.entity.MarketOrder;
+import com.chenpperr.xhs.market.domain.vo.MarketOrderVO;
 import com.chenpperr.xhs.market.mapper.MarketItemMapper;
 import com.chenpperr.xhs.market.mapper.MarketOrderMapper;
 import com.chenpperr.xhs.market.service.MarketOrderService;
 import com.chenpperr.xhs.security.JwtUtil;
 import com.chenpperr.xhs.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -35,7 +44,10 @@ public class MarketOrderServiceImpl extends ServiceImpl<MarketOrderMapper, Marke
 
     private final UserMapper userMapper;
 
+    private final RabbitTemplate  rabbitTemplate;
+
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public String createOrder(MarketOrderCreateDTO orderCreateDTO) {
         //参数校验与数据获取
         Long itemId = orderCreateDTO.getItemId();
@@ -48,7 +60,6 @@ public class MarketOrderServiceImpl extends ServiceImpl<MarketOrderMapper, Marke
         Long buyerId = SecurityUtil.getCurrentUserId();
         Long sellerId = item.getSellerId();
         BigDecimal amount = item.getPrice();
-        Long currentUserId = SecurityUtil.getCurrentUserId();
 
         if(item.getSellerId().equals(buyerId)){
             throw new BusinessException(ResultCode.FORBIDDEN, "不能购买自己的商品");
@@ -84,9 +95,22 @@ public class MarketOrderServiceImpl extends ServiceImpl<MarketOrderMapper, Marke
 
         this.save(order);
 
+        //发送延迟消息给“取消订单”函数
+        rabbitTemplate.convertAndSend(
+                RabbitMQConfig.DELAY_EXCHANGE,
+                RabbitMQConfig.DELAY_ROUTING_KEY,
+                order.getOrderSn(),     //这就是要发送的消息内容
+                message -> {
+                    message.getMessageProperties().setDelayLong(30 * 60 * 1000L);
+                    return message;
+                }
+        );
+
         return orderSn;
     }
 
+
+    //作为延迟消息的生产者
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Boolean payOrder(String orderSn) {
@@ -135,13 +159,17 @@ public class MarketOrderServiceImpl extends ServiceImpl<MarketOrderMapper, Marke
         //更新订单状态/时间：已完成
         order.setStatus(1);
         order.setUpdateTime(LocalDateTime.now());
+        order.setPayTime(LocalDateTime.now());
         this.updateById(order);
 
         //返回支付结果
         return true;
     }
 
+
+    //作为延迟消息的消费者
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public Boolean cancelOrder(String orderSn) {
         //查询订单是否存在
         MarketOrder order = this.getOne(new LambdaQueryWrapper<MarketOrder>().eq(MarketOrder::getOrderSn, orderSn));
@@ -172,7 +200,7 @@ public class MarketOrderServiceImpl extends ServiceImpl<MarketOrderMapper, Marke
     }
 
     @Override
-    public Page<MarketOrder> getMyOrders(Page<MarketOrder> pageParam, String type) {
+    public Page<MarketOrderVO> getMyOrders(Page<MarketOrder> pageParam, String type) {
         Long currentUserId = SecurityUtil.getCurrentUserId();
 
         LambdaQueryWrapper<MarketOrder> wrapper = new LambdaQueryWrapper<>();
@@ -191,8 +219,95 @@ public class MarketOrderServiceImpl extends ServiceImpl<MarketOrderMapper, Marke
 
         wrapper.orderByDesc(MarketOrder::getCreateTime);
 
-        return this.page(pageParam, wrapper);
+        Page<MarketOrder> orderPage = this.page(pageParam, wrapper);
+        List<MarketOrder> orders = orderPage.getRecords();
 
+        //批量查询商品信息：itemId -> MarketItem，避免循环查库
+        Map<Long, MarketItem> itemMap = orders.isEmpty() ? Collections.emptyMap()
+                : marketItemMapper.selectBatchIds(orders.stream()
+                        .map(MarketOrder::getItemId)
+                        .distinct()
+                        .collect(Collectors.toList()))
+                .stream()
+                .collect(Collectors.toMap(MarketItem::getId, Function.identity()));
+
+        //批量查询交易对方用户信息：对方userId -> UserSimpleVO
+        Map<Long, UserSimpleVO> userMap = orders.isEmpty() ? Collections.emptyMap()
+                : userMapper.selectBatchIds(orders.stream()
+                        .map(o -> resolveCounterpartyId(o, currentUserId))
+                        .distinct()
+                        .collect(Collectors.toList()))
+                .stream()
+                .collect(Collectors.toMap(User::getId, this::toUserSimpleVO));
+
+        //组装 VO 列表
+        List<MarketOrderVO> voList = orders.stream().map(order -> {
+            MarketItem item = itemMap.get(order.getItemId());
+            Long counterpartyId = resolveCounterpartyId(order, currentUserId);
+            //防御性兜底：对方用户被删除时显示「已注销用户」
+            UserSimpleVO counterparty = userMap.getOrDefault(counterpartyId,
+                    UserSimpleVO.builder()
+                            .userId(counterpartyId)
+                            .nickname("已注销用户")
+                            .avatar(null)
+                            .build());
+
+            return MarketOrderVO.builder()
+                    .id(order.getId())
+                    .orderSn(order.getOrderSn())
+                    .itemId(order.getItemId())
+                    //防御性兜底：商品被物理删除时给默认文案
+                    .itemTitle(item != null ? item.getTitle() : "商品已删除")
+                    .itemCoverUrl(item != null ? item.getCoverUrl() : null)
+                    .amount(order.getAmount())
+                    .status(order.getStatus())
+                    .counterparty(counterparty)
+                    .payTime(order.getPayTime())
+                    .createTime(order.getCreateTime())
+                    .build();
+        }).collect(Collectors.toList());
+
+        //构造 VO 分页，保留原分页信息
+        Page<MarketOrderVO> voPage = new Page<>(orderPage.getCurrent(), orderPage.getSize(), orderPage.getTotal());
+        voPage.setRecords(voList);
+        return voPage;
+    }
+
+    @Override
+    public Boolean cancelOrderOnTimeOut(String orderSn) {
+        MarketOrder order = this.getOne(new LambdaQueryWrapper<MarketOrder>().eq(MarketOrder::getOrderSn, orderSn));
+        if(order.getStatus() == 0){
+            order.setStatus(2);
+            Long itemId = order.getItemId();
+            MarketItem item = marketItemMapper.selectById(itemId);
+            item.setStatus(0);
+
+            marketItemMapper.updateById(item);
+            this.updateById(order);
+
+            return true;
+        }
+
+        if(order == null || order.getStatus()!=0 ){
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * 计算交易对方ID：买家视角返回卖家ID，卖家视角返回买家ID
+     */
+    private Long resolveCounterpartyId(MarketOrder order, Long currentUserId) {
+        return order.getBuyerId().equals(currentUserId) ? order.getSellerId() : order.getBuyerId();
+    }
+
+    private UserSimpleVO toUserSimpleVO(User user) {
+        return UserSimpleVO.builder()
+                .userId(user.getId())
+                .nickname(user.getNickname())
+                .avatar(user.getAvatar())
+                .build();
     }
 }
 

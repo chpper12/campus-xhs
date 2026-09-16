@@ -3,15 +3,24 @@ package com.chenpperr.xhs.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.chenpperr.xhs.common.ResultCode;
 import com.chenpperr.xhs.domain.dto.UpdateUserDTO;
+import com.chenpperr.xhs.domain.entity.Post;
 import com.chenpperr.xhs.domain.entity.User;
+import com.chenpperr.xhs.domain.vo.UserProfileVO;
+import com.chenpperr.xhs.exception.BusinessException;
 import com.chenpperr.xhs.mapper.UserMapper;
 import com.chenpperr.xhs.security.JwtUtil;
 import com.chenpperr.xhs.security.LoginVO;
 import com.chenpperr.xhs.security.RegisterDTO;
+import com.chenpperr.xhs.service.FollowService;
+import com.chenpperr.xhs.service.PostService;
 import com.chenpperr.xhs.service.UserService;
+import com.chenpperr.xhs.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -26,6 +35,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
+
+    /**
+     * FollowService/PostService 都注入了 UserService，直接构造器注入会形成循环依赖
+     * （Spring Boot 默认禁止循环引用），用 @Lazy 延迟注入打破循环（同 FeedServiceImpl 先例）
+     */
+    @Lazy
+    @Autowired
+    private FollowService followService;
+
+    @Lazy
+    @Autowired
+    private PostService postService;
 
 
     @Override
@@ -91,5 +112,43 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         vo.setBio(user.getBio());
 
         return vo;
+    }
+
+    @Override
+    public UserProfileVO getUserProfile(Long userId) {
+        // 1. 查询用户是否存在
+        User user = getById(userId);
+        if (user == null) {
+            throw new BusinessException(ResultCode.NOT_FOUND, "用户不存在");
+        }
+
+        // 2. 查询统计数据
+        Long postCount = postService.count(
+                new LambdaQueryWrapper<Post>().eq(Post::getUserId, userId));
+        Long followingCount = followService.getFollowingCount(userId);
+        Long followerCount = followService.getFollowerCount(userId);
+
+        // 3. 判断当前登录用户是否已关注此人（未登录或查看自己时为 null）
+        Boolean isFollowed = null;
+        Long currentUserId = SecurityUtil.getCurrentUserIdOrNull();
+        boolean isSelf = currentUserId != null && currentUserId.equals(userId);
+        if (currentUserId != null && !isSelf) {
+            isFollowed = followService.isFollowing(currentUserId, userId);
+        }
+
+        // 4. 组装 VO（余额仅自己可见：查看他人主页或未登录时为 null）
+        return UserProfileVO.builder()
+                .userId(user.getId())
+                .nickname(user.getNickname())
+                .avatar(user.getAvatar())
+                .bio(user.getBio())
+                .phone(user.getPhone())
+                .email(user.getEmail())
+                .postCount(postCount)
+                .followingCount(followingCount)
+                .followerCount(followerCount)
+                .isFollowed(isFollowed)
+                .balance(isSelf ? user.getBalance() : null)
+                .build();
     }
 }

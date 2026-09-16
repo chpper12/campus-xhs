@@ -10,7 +10,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  * 校园小红书启动类
  */
 @SpringBootApplication
-@MapperScan("com.chenpperr.xhs.mapper")
+@MapperScan({"com.chenpperr.xhs.mapper", "com.chenpperr.xhs.market.mapper"})
 @EnableAsync
 @EnableScheduling
 public class CampusApplication {

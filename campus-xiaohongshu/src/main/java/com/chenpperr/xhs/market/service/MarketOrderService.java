@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.chenpperr.xhs.common.Result;
 import com.chenpperr.xhs.market.domain.dto.MarketOrderCreateDTO;
 import com.chenpperr.xhs.market.domain.entity.MarketOrder;
+import com.chenpperr.xhs.market.domain.vo.MarketOrderVO;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,9 +23,10 @@ public interface MarketOrderService  extends IService<MarketOrder> {
     //取消订单
     Boolean cancelOrder(String orderSn);
 
-    //买卖记录
-    Page<MarketOrder> getMyOrders(Page<MarketOrder> pageParam, String type);
+    //买卖记录（返回带商品标题/封面、交易对方信息的 VO 分页）
+    Page<MarketOrderVO> getMyOrders(Page<MarketOrder> pageParam, String type);
 
-
+    //取消超时订单
+    Boolean cancelOrderOnTimeOut(String orderSn);
 }
 

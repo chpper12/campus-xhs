@@ -5,35 +5,36 @@ import com.chenpperr.xhs.common.Result;
 import com.chenpperr.xhs.domain.entity.Post;
 import com.chenpperr.xhs.market.domain.dto.MarketItemPublishDTO;
 import com.chenpperr.xhs.market.domain.entity.MarketItem;
+import com.chenpperr.xhs.market.domain.vo.MarketItemVO;
 import com.chenpperr.xhs.market.service.MarketItemService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/market/items")
+@RequestMapping("/api/v1/market/items")
 @RequiredArgsConstructor
 public class MartetItemController {
 
     private final MarketItemService marketItemService;
 
-    //获取商品列表
+    //获取商品列表（VO 含卖家昵称头像）
     @GetMapping
-    public Result<Page<MarketItem>> getItems(
+    public Result<Page<MarketItemVO>> getItems(
             @RequestParam(defaultValue = "1") Integer pageNum,
             @RequestParam(defaultValue = "10") Integer pageSize,
             @RequestParam(required = false) String keyword) {
 
         Page<MarketItem> pageParam = new Page<>(pageNum, pageSize);
-        Page<MarketItem> page = marketItemService.getItems(pageParam, keyword);
+        Page<MarketItemVO> page = marketItemService.getItems(pageParam, keyword);
 
         return Result.success(page);
     }
 
-    //获取商品详情
+    //获取商品详情（VO 含卖家昵称头像）
     @GetMapping("/{id}")
-    public Result<MarketItem> getItemById(@PathVariable Long id) {
-        MarketItem item = marketItemService.getItemById(id);
+    public Result<MarketItemVO> getItemById(@PathVariable Long id) {
+        MarketItemVO item = marketItemService.getItemById(id);
         return Result.success(item);
     }
 

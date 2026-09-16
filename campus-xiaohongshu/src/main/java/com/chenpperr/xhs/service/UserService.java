@@ -3,6 +3,7 @@ package com.chenpperr.xhs.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.chenpperr.xhs.domain.dto.UpdateUserDTO;
 import com.chenpperr.xhs.domain.entity.User;
+import com.chenpperr.xhs.domain.vo.UserProfileVO;
 import com.chenpperr.xhs.security.LoginVO;
 import com.chenpperr.xhs.security.RegisterDTO;
 
@@ -44,4 +45,17 @@ public interface UserService extends IService<User> {
      * @throws RuntimeException 用户名已被注册时抛出
      */
     LoginVO register(RegisterDTO dto);
+
+    /**
+     * 获取用户资料（个人主页用）
+     *
+     * 返回用户基本信息 + 统计数据（笔记数、关注数、粉丝数）
+     * 当前登录用户查看他人主页时返回 isFollowed 状态；
+     * 钱包余额 balance 仅在查看自己主页时返回，其他情况为 null
+     *
+     * @param userId 目标用户ID
+     * @return 用户资料 VO
+     * @throws com.chenpperr.xhs.exception.BusinessException 用户不存在时抛出
+     */
+    UserProfileVO getUserProfile(Long userId);
 }
