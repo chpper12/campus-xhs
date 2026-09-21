@@ -18,26 +18,10 @@ public class RabbitMQConfig {
     public static final String DELAY_QUEUE = "order.delay.queue";
     public static final String DELAY_ROUTING_KEY = "order.delay.key";
 
-    //声明延迟交换机
-    @Bean
-    public CustomExchange delayExchange() {
-        Map<String, Object> args = new HashMap<>();
-        //声明底层路由模式
-        args.put("x-delayed-type", "direct");
-        return new CustomExchange(DELAY_EXCHANGE,"x-delayed-message",true,false,args);
-    }
+    //声明支付成功交换机、队列、RoutingKey
+    public static final String PAY_EXCHANGE = "order.pay.exchange";
+    public static final String PAY_QUEUE = "order.pay.queue";
+    public static final String PAY_ROUTING_KEY = "order.pay.key";
 
-    @Bean
-    public Queue delayQueue() {
-        return new Queue(DELAY_QUEUE,true);
-    }
-
-    @Bean
-    public Binding delayBinding() {
-        return BindingBuilder.bind(delayQueue())
-                .to(delayExchange())
-                .with(DELAY_ROUTING_KEY)
-                .noargs();
-    }
 
 }

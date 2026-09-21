@@ -35,7 +35,7 @@ public class MarketItem implements Serializable {
     private String contactInfo;
 
     /**
-     * 状态: 0-待售, 1-锁定中(已下单未支付), 2-已售出, 3-已下架
+     * 商品状态: 0-待售, 1-锁定中(已下单未支付), 2-已售出, 3-已下架
      */
     private Integer status;
 

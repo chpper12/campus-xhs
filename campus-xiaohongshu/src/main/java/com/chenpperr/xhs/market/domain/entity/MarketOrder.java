@@ -32,7 +32,7 @@ public class MarketOrder implements Serializable {
     private BigDecimal amount;
 
     /**
-     * 订单状态: 0-待支付, 1-已完成(已支付), 2-已取消(超时/手动)
+     * 订单状态: 0-待支付, 1-已完成(已支付), 2-已取消(超时/手动), 3-支付中
      */
     private Integer status;
 
@@ -41,6 +41,8 @@ public class MarketOrder implements Serializable {
     private LocalDateTime createTime;
 
     private LocalDateTime updateTime;
+
+    private Integer refunded;
 }
 
 
